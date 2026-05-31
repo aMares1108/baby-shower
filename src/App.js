@@ -8,13 +8,26 @@ import Footer from "./components/Footer";
 import { eventConfig } from "./data/eventConfig";
 
 function App() {
+  const eventDate = new Date(eventConfig.date);
+  const dateLabel = new Intl.DateTimeFormat("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(eventDate);
+  const timeLabel = new Intl.DateTimeFormat("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }).format(eventDate);
+
   return (
     <>
       <Hero title={eventConfig.title} subtitle={eventConfig.subtitle} />
       <main>
         <EventDetails
-          dateLabel="Sabado 20 de junio de 2026"
-          timeLabel="11:00 AM"
+          dateLabel={dateLabel}
+          timeLabel={timeLabel}
           place={eventConfig.place}
         />
         <Countdown targetDate={eventConfig.date} />

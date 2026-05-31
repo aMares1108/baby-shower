@@ -4,7 +4,7 @@ export const eventConfig = {
   name: name,
   subtitle: "Acompáñanos a celebrar la dulce espera con juegos, brunch y sorpresas.",
   date: "2026-06-20T11:00:00-06:00",
-  place: "Jardin Magnolia, Monterrey",
+  place: "Texcoco",
   timeline: [
     { time: "11:00", activity: "Bienvenida y mocktails" },
     { time: "11:40", activity: "Brunch y fotos" },
