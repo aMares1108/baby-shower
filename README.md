@@ -1,5 +1,17 @@
-# React basic
+# Baby Shower Invitation (React)
 
-[Azure Static Web Apps](https://docs.microsoft.com/azure/static-web-apps/overview) allows you to easily build [React](https://reactjs.org/) apps in minutes. Use this repo with the [React quickstart](https://docs.microsoft.com/azure/static-web-apps/getting-started?tabs=react) to build and customize a new static site.
+Invitacion web construida en React con arquitectura modular por componentes.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Estructura
+
+- `src/App.js`: composicion general de la pagina.
+- `src/components/`: modulos React reutilizables.
+- `src/hooks/useCountdown.js`: logica de cuenta regresiva.
+- `src/data/eventConfig.js`: configuracion del evento.
+- `src/index.css`: estilo visual principal.
+
+## Comandos
+
+- `npm start`: modo desarrollo en `http://localhost:3000`.
+- `npm run build`: build de produccion en `build/`.
+- `npm test`: pruebas en modo interactivo.
