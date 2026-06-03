@@ -1,6 +1,6 @@
 :root {
-	--bg: #fff6fb;
-	--bg-soft: #ffeef7;
+	--bg: #fffafd;
+	--bg-soft: #fff5fa;
 	--surface: #fff9fd;
 	--surface-strong: #ffe4f1;
 	--text: #4a2d3a;
@@ -26,9 +26,9 @@ body {
 	font-family: "Manrope", sans-serif;
 	color: var(--text);
 	background:
-		radial-gradient(circle at 12% 8%, #ffd9ec 0%, transparent 36%),
-		radial-gradient(circle at 88% 18%, #ffe6f2 0%, transparent 40%),
-		linear-gradient(180deg, #fff7fc 0%, #fff0f8 100%),
+		radial-gradient(circle at 12% 8%, #ffe7f3 0%, transparent 36%),
+		radial-gradient(circle at 88% 18%, #fff0f7 0%, transparent 40%),
+		linear-gradient(180deg, #fffbfe 0%, #fff6fb 100%),
 		var(--bg);
 	line-height: 1.5;
 }
@@ -73,7 +73,7 @@ h2 {
 }
 
 .hero {
-	min-height: 64vh;
+	/* min-height: 64vh; */
 	display: grid;
 	place-items: center;
 	position: relative;
@@ -126,7 +126,7 @@ h2 {
 }
 
 h1 {
-	font-size: clamp(2.2rem, 6vw, 4.5rem);
+	font-size: clamp(4.2rem, 6vw, 4.5rem);
 	line-height: 1.05;
 }
 
@@ -265,7 +265,7 @@ h2 {
 }
 
 .floating-image img {
-	width: clamp(68px, 9vw, 120px);
+	width: clamp(168px, 9vw, 120px);
 	height: auto;
 	display: block;
 	opacity: 0.92;

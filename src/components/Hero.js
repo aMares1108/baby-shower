@@ -6,8 +6,8 @@ function Hero({ title, subtitle }) {
       <div className="hero__glow" aria-hidden="true" />
       <div className="container hero__content">
         <p className="kicker">Con mucho amor</p>
-        <h1 className=" indie-flower-regular">{title}</h1>
-        <p className="lead playwrite-au-vic-guides-regular">{subtitle}</p>
+        <h1 className="indie-flower-regular">{title}</h1>
+        <p className="lead">{subtitle}</p>
         <a href="#rsvp" className="button button--primary">
           Confirmar asistencia
         </a>
