@@ -1,15 +1,15 @@
 :root {
-	--bg: #fffaf4;
-	--bg-soft: #f7efe5;
-	--surface: #fff7ed;
-	--surface-strong: #f0dfcc;
-	--text: #2f251d;
-	--muted: #6b5648;
-	--accent: #d26a4a;
-	--accent-hover: #bb5638;
-	--ring: #efc9aa;
+	--bg: #fff6fb;
+	--bg-soft: #ffeef7;
+	--surface: #fff9fd;
+	--surface-strong: #ffe4f1;
+	--text: #4a2d3a;
+	--muted: #7f5d70;
+	--accent: #e47aa9;
+	--accent-hover: #d86599;
+	--ring: #efc6db;
 	--radius: 20px;
-	--shadow: 0 16px 40px rgba(120, 70, 36, 0.12);
+	--shadow: 0 16px 40px rgba(176, 98, 137, 0.16);
 }
 
 * {
@@ -26,8 +26,9 @@ body {
 	font-family: "Manrope", sans-serif;
 	color: var(--text);
 	background:
-		radial-gradient(circle at 10% 5%, #ffe8d2 0%, transparent 35%),
-		radial-gradient(circle at 90% 20%, #f6d8bf 0%, transparent 38%),
+		radial-gradient(circle at 12% 8%, #ffd9ec 0%, transparent 36%),
+		radial-gradient(circle at 88% 18%, #ffe6f2 0%, transparent 40%),
+		linear-gradient(180deg, #fff7fc 0%, #fff0f8 100%),
 		var(--bg);
 	line-height: 1.5;
 }
@@ -90,7 +91,7 @@ h2 {
 	width: 620px;
 	aspect-ratio: 1;
 	border-radius: 50%;
-	background: radial-gradient(circle, rgba(210, 106, 74, 0.26) 0%, transparent 65%);
+	background: radial-gradient(circle, rgba(228, 122, 169, 0.3) 0%, transparent 65%);
 	top: -220px;
 	right: -90px;
 	filter: blur(4px);
@@ -196,7 +197,7 @@ h2 {
 }
 
 .timeline li {
-	background: #fff;
+	background: var(--surface);
 	border: 1px solid var(--ring);
 	border-radius: 14px;
 	padding: 0.9rem 1rem;
@@ -220,10 +221,10 @@ h2 {
 
 .form input {
 	padding: 0.8rem 0.9rem;
-	border: 1px solid #ddc2aa;
+	border: 1px solid var(--ring);
 	border-radius: 12px;
 	font: inherit;
-	background: #fffdfb;
+	background: #fffbfe;
 }
 
 .form input:focus {
@@ -241,6 +242,33 @@ h2 {
 	padding: 2rem 0 3rem;
 	text-align: center;
 	color: var(--muted);
+}
+
+.playwrite-au-vic-guides-regular {
+  font-family: "Playwrite AU VIC Guides", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.indie-flower-regular {
+  font-family: "Indie Flower", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.floating-image {
+	position: fixed;
+	right: 1rem;
+	bottom: 1rem;
+	z-index: 50;
+	pointer-events: none;
+}
+
+.floating-image img {
+	width: clamp(68px, 9vw, 120px);
+	height: auto;
+	display: block;
+	opacity: 0.92;
 }
 
 @media (max-width: 900px) {

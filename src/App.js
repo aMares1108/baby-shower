@@ -5,6 +5,7 @@ import Countdown from "./components/Countdown";
 import Timeline from "./components/Timeline";
 import RsvpForm from "./components/RsvpForm";
 import Footer from "./components/Footer";
+import FloatingImage from "./components/FloatingImage";
 import { eventConfig } from "./data/eventConfig";
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
         <RsvpForm />
       </main>
       <Footer name={eventConfig.name} />
+      <FloatingImage src="/Copilot_20260602_204846.png" alt="Ilustracion de baby shower" />
     </>
   );
 }
