@@ -6,6 +6,7 @@ import Timeline from "./components/Timeline";
 import RsvpForm from "./components/RsvpForm";
 import Footer from "./components/Footer";
 import FloatingImage from "./components/FloatingImage";
+import CenteredMedia from "./components/CenteredMedia";
 import { eventConfig } from "./data/eventConfig";
 
 function App() {
@@ -25,6 +26,12 @@ function App() {
   return (
     <>
       <Hero title={eventConfig.title} subtitle={eventConfig.subtitle} />
+      <CenteredMedia
+        type="image"
+        src="/pancita.jpg"
+        alt="Foto de la pancita"
+        caption="Preparando todo"
+      />
       <main>
         <EventDetails
           dateLabel={dateLabel}
@@ -32,8 +39,20 @@ function App() {
           place={eventConfig.place}
         />
         <Countdown targetDate={eventConfig.date} />
+        <CenteredMedia
+          type="image"
+          src="/ultrasonido.jpg"
+          alt="Foto del ultrasonido"
+          caption="Posando en las primeras fotos"
+        />
         <Timeline items={eventConfig.timeline} />
         <RsvpForm />
+        <CenteredMedia
+          type="image"
+          src="/ultrasonid_3d.jpg"
+          alt="Foto del ultrasonido 3D"
+          caption="Nos vemos pronto"
+        />
       </main>
       <Footer name={eventConfig.name} />
       <FloatingImage src="/Copilot_20260602_204846.png" alt="Ilustracion de baby shower" />
