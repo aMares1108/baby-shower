@@ -7,6 +7,7 @@ import RsvpForm from "./components/RsvpForm";
 import Footer from "./components/Footer";
 import FloatingImage from "./components/FloatingImage";
 import CenteredMedia from "./components/CenteredMedia";
+import GiftTableMessage from "./components/GiftTableMessage";
 import { eventConfig } from "./data/eventConfig";
 
 function App() {
@@ -44,6 +45,13 @@ function App() {
           src="/ultrasonido.jpg"
           alt="Foto del ultrasonido"
           caption="Posando en las primeras fotos"
+        />
+        <GiftTableMessage
+          title="Mesa de regalos"
+          message="Si deseas consentir al bebé con un detalle, tendremos una mesa de regalos preparada durante el evento."
+          note="Tu presencia es lo más importante para nosotros, pero cualquier obsequio será recibido con mucho cariño."
+          href={eventConfig.giftTableUrl}
+          buttonLabel={eventConfig.giftTableLabel}
         />
         <Timeline items={eventConfig.timeline} />
         <RsvpForm />
