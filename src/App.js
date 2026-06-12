@@ -8,9 +8,12 @@ import Footer from "./components/Footer";
 import FloatingImage from "./components/FloatingImage";
 import CenteredMedia from "./components/CenteredMedia";
 import GiftTableMessage from "./components/GiftTableMessage";
+import AdminRecords from "./components/AdminRecords";
 import { eventConfig } from "./data/eventConfig";
 
 function App() {
+  const pathname = typeof window !== "undefined" ? window.location.pathname.replace(/\/$/, "") : "";
+  const isAdminView = pathname === "/admin";
   const eventDate = new Date(eventConfig.date);
   const dateLabel = new Intl.DateTimeFormat("es-MX", {
     weekday: "long",
@@ -23,6 +26,10 @@ function App() {
     minute: "2-digit",
     hour12: true
   }).format(eventDate);
+
+  if (isAdminView) {
+    return <AdminRecords eventName={eventConfig.title} />;
+  }
 
   return (
     <>

@@ -246,6 +246,139 @@ h2 {
 	margin-top: 1.25rem;
 }
 
+.admin-view {
+	min-height: 100vh;
+}
+
+.admin-view__header {
+	display: flex;
+	align-items: end;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.admin-view__title {
+	font-size: clamp(2.6rem, 5vw, 4rem);
+	line-height: 1.05;
+	margin-bottom: 0.75rem;
+}
+
+.admin-view__lead {
+	margin-inline: 0;
+	max-width: 48ch;
+}
+
+.admin-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+}
+
+.admin-panel {
+	background: var(--surface);
+	border: 1px solid var(--ring);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 1.5rem;
+	overflow: hidden;
+}
+
+.admin-panel--narrow {
+	max-width: 560px;
+	margin-inline: auto;
+}
+
+.admin-toolbar {
+	display: flex;
+	gap: 1rem;
+	align-items: end;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
+}
+
+.admin-toolbar__summary {
+	flex: 1 1 240px;
+}
+
+.admin-toolbar__actions {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.admin-toolbar__field {
+	display: grid;
+	gap: 0.35rem;
+	font-weight: 600;
+	flex: 1 1 320px;
+}
+
+.admin-toolbar__field input {
+	padding: 0.8rem 0.9rem;
+	border: 1px solid var(--ring);
+	border-radius: 12px;
+	font: inherit;
+	background: #fffbfe;
+}
+
+.admin-toolbar__field input:focus {
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
+}
+
+.admin-feedback {
+	margin-bottom: 1rem;
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.admin-feedback--error {
+	color: #a53b68;
+}
+
+.admin-table-wrapper {
+	overflow-x: auto;
+	border-radius: 16px;
+	border: 1px solid var(--ring);
+}
+
+.admin-table {
+	width: 100%;
+	border-collapse: collapse;
+	background: #fff;
+	min-width: 640px;
+}
+
+.admin-table th,
+.admin-table td {
+	padding: 0.95rem 1rem;
+	text-align: left;
+	border-bottom: 1px solid var(--ring);
+}
+
+.admin-table th {
+	background: var(--surface-strong);
+	font-family: "Fraunces", serif;
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.admin-button--ghost {
+	background: transparent;
+	color: var(--accent);
+	border: 1px solid var(--ring);
+}
+
+.admin-button--ghost:hover {
+	background: #fff2f8;
+}
+
+.admin-table tbody tr:nth-child(even) {
+	background: #fff8fc;
+}
+
 .form {
 	max-width: 560px;
 	display: grid;
@@ -318,6 +451,23 @@ h2 {
   font-family: "Playwrite AU VIC Guides", cursive;
   font-weight: 400;
   font-style: normal;
+
+}
+
+@media (max-width: 720px) {
+	.details-grid,
+	.admin-grid,
+	.countdown {
+		grid-template-columns: 1fr;
+	}
+
+	.admin-toolbar {
+		align-items: stretch;
+	}
+
+	.hero {
+		padding-bottom: 4rem;
+	}
 }
 
 .indie-flower-regular {
