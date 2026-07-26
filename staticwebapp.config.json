@@ -9,6 +9,14 @@
             "allowedRoles": ["colaborador"]
         },
         {
+            "route": "/api/updateRecord",
+            "allowedRoles": ["colaborador"]
+        },
+        {
+            "route": "/api/deleteRecord",
+            "allowedRoles": ["colaborador"]
+        },
+        {
             "route": "/api/addRecord",
             "allowedRoles": ["anonymous"]
         },

@@ -16,6 +16,40 @@ async function requestRecords() {
   return payload.records || [];
 }
 
+async function requestUpdateRecord(record) {
+  const response = await fetch("/api/updateRecord", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record)
+  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const requestError = new Error(payload.error || "No fue posible actualizar el registro.");
+    requestError.status = response.status;
+    throw requestError;
+  }
+
+  return payload;
+}
+
+async function requestDeleteRecord(record) {
+  const response = await fetch("/api/deleteRecord", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record)
+  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const requestError = new Error(payload.error || "No fue posible eliminar el registro.");
+    requestError.status = response.status;
+    throw requestError;
+  }
+
+  return payload;
+}
+
 async function requestClientPrincipal() {
   const response = await fetch("/.auth/me");
   const payload = await response.json().catch(() => ({}));
@@ -47,6 +81,7 @@ function AdminRecords({ eventName }) {
   const [principal, setPrincipal] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [processingRowKey, setProcessingRowKey] = useState("");
 
   const totalGuests = records.reduce((sum, record) => {
     return sum + (Number(record.guests) || 0);
@@ -136,6 +171,83 @@ function AdminRecords({ eventName }) {
     await loadRecords();
   };
 
+  const handleProtectedActionError = (requestError) => {
+    if (requestError.status === 401) {
+      setPrincipal(null);
+      setError("Tu sesion ya no es valida. Inicia sesion de nuevo.");
+      return;
+    }
+
+    if (requestError.status === 403) {
+      setError("Tu usuario no tiene permisos de colaborador.");
+      return;
+    }
+
+    setError(requestError.message || "No fue posible completar la accion.");
+  };
+
+  const onEditRecord = async (record) => {
+    const nextName = window.prompt("Nombre", record.name || "");
+    if (nextName === null) {
+      return;
+    }
+
+    const nextPhone = window.prompt("Telefono", record.phone || "");
+    if (nextPhone === null) {
+      return;
+    }
+
+    const nextGuests = window.prompt("Invitados", String(record.guests || "0"));
+    if (nextGuests === null) {
+      return;
+    }
+
+    const shouldUpdate = window.confirm("¿Confirmas actualizar este registro?");
+    if (!shouldUpdate) {
+      return;
+    }
+
+    setProcessingRowKey(record.rowKey);
+    setError("");
+
+    try {
+      await requestUpdateRecord({
+        partitionKey: record.partitionKey,
+        rowKey: record.rowKey,
+        name: nextName.trim(),
+        phone: nextPhone.trim(),
+        guests: nextGuests.trim(),
+      });
+      await loadRecords();
+    } catch (requestError) {
+      handleProtectedActionError(requestError);
+    } finally {
+      setProcessingRowKey("");
+    }
+  };
+
+  const onDeleteRecord = async (record) => {
+    const shouldDelete = window.confirm("¿Seguro que deseas eliminar este registro? Esta accion no se puede deshacer.");
+    if (!shouldDelete) {
+      return;
+    }
+
+    setProcessingRowKey(record.rowKey);
+    setError("");
+
+    try {
+      await requestDeleteRecord({
+        partitionKey: record.partitionKey,
+        rowKey: record.rowKey,
+      });
+      await loadRecords();
+    } catch (requestError) {
+      handleProtectedActionError(requestError);
+    } finally {
+      setProcessingRowKey("");
+    }
+  };
+
   return (
     <main className="admin-view">
       <section className="section">
@@ -201,6 +313,7 @@ function AdminRecords({ eventName }) {
                   <th>Telefono</th>
                   <th>Invitados</th>
                   <th>Fecha</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -210,6 +323,26 @@ function AdminRecords({ eventName }) {
                     <td>{record.phone || "Sin telefono"}</td>
                     <td>{record.guests || "0"}</td>
                     <td>{formatDate(record.createdAt)}</td>
+                    <td>
+                      <div className="admin-toolbar__actions">
+                        <button
+                          type="button"
+                          className="button admin-button--ghost"
+                          onClick={() => onEditRecord(record)}
+                          disabled={loading || processingRowKey === record.rowKey}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="button admin-button--ghost"
+                          onClick={() => onDeleteRecord(record)}
+                          disabled={loading || processingRowKey === record.rowKey}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
