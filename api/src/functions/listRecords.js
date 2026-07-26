@@ -41,7 +41,7 @@ app.http("listRecords", {
                     status: 401,
                     jsonBody: {
                         ok: false,
-                        error: "Unauthorized",
+                        error: session.error || "Unauthorized",
                     },
                 };
             }

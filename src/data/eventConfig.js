@@ -9,8 +9,7 @@ export const eventConfig = {
   giftTableLabel: "Ver mesa de regalos",
   timeline: [
     { time: "12:00", activity: "Bienvenida" },
-    { time: "12:40", activity: "Regalos" },
-    { time: "13:20", activity: "Juegos" },
+    { time: "12:40", activity: "Juegos" },
     { time: "14:00", activity: "Brunch" }
   ]
 };
