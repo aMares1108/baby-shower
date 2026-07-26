@@ -9,11 +9,13 @@ import FloatingImage from "./components/FloatingImage";
 import CenteredMedia from "./components/CenteredMedia";
 import GiftTableMessage from "./components/GiftTableMessage";
 import AdminRecords from "./components/AdminRecords";
+import ValidatedGuestDetails from "./components/ValidatedGuestDetails";
 import { eventConfig } from "./data/eventConfig";
 
 function App() {
   const pathname = typeof window !== "undefined" ? window.location.pathname.replace(/\/$/, "") : "";
   const isAdminView = pathname === "/admin";
+  const isValidatedGuestView = pathname === "/detalles";
   const eventDate = new Date(eventConfig.date);
   const dateLabel = new Intl.DateTimeFormat("es-MX", {
     weekday: "long",
@@ -29,6 +31,18 @@ function App() {
 
   if (isAdminView) {
     return <AdminRecords eventName={eventConfig.title} dateLabel={dateLabel} timeLabel={timeLabel} place={eventConfig.place} />;
+  }
+
+  if (isValidatedGuestView) {
+    return (
+      <ValidatedGuestDetails
+        eventName={eventConfig.title}
+        dateLabel={dateLabel}
+        timeLabel={timeLabel}
+        place={eventConfig.detailedPlace}
+        locationUrl={eventConfig.locationUrl}
+      />
+    );
   }
 
   return (

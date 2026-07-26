@@ -5,6 +5,8 @@ export const eventConfig = {
   subtitle: "Acompáñanos a celebrar la dulce espera con juegos, brunch y sorpresas. Recuerda confirmar tu asistencia",
   date: "2026-08-01T12:00:00-06:00",
   place: "Texcoco, a 5 min de la Feria del Caballo",
+  detailedPlace: process.env.FINAL_DETAILS_ADDRESS_TEXT,
+  locationUrl: process.env.FINAL_DETAILS_MAP_URL,
   giftTableUrl: "https://mesaderegalos.liverpool.com.mx/milistaderegalos/51997221",
   giftTableLabel: "Ver mesa de regalos",
   timeline: [

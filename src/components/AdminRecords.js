@@ -236,6 +236,11 @@ function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
       return;
     }
 
+    const nextMessage = window.prompt("Estado (ej. pending o validated)", record.message || "pending");
+    if (nextMessage === null) {
+      return;
+    }
+
     const shouldUpdate = window.confirm("¿Confirmas actualizar este registro?");
     if (!shouldUpdate) {
       return;
@@ -251,6 +256,7 @@ function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
         name: nextName.trim(),
         phone: nextPhone.trim(),
         guests: nextGuests.trim(),
+        message: nextMessage.trim(),
       });
       await loadRecords();
     } catch (requestError) {
@@ -346,6 +352,7 @@ function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
                   <th>Nombre</th>
                   <th>Telefono</th>
                   <th>Invitados</th>
+                  <th>Estado</th>
                   <th>Fecha</th>
                   <th>Acciones</th>
                 </tr>
@@ -366,6 +373,11 @@ function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
                       ) : "Sin telefono"}
                     </td>
                     <td>{record.guests || "0"}</td>
+                    <td>
+                      <span className={`admin-status${record.message === "validated" ? " admin-status--validated" : ""}`}>
+                        {record.message || "pending"}
+                      </span>
+                    </td>
                     <td>{formatDate(record.createdAt)}</td>
                     <td>
                       <div className="admin-toolbar__actions">

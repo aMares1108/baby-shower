@@ -62,6 +62,7 @@ app.http("updateRecord", {
                 name: payload.name || "",
                 phone: payload.phone || "",
                 guests: payload.guests || "",
+                message: payload.message || "",
                 updatedAt: new Date().toISOString(),
             };
 

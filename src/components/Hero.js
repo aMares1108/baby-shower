@@ -8,9 +8,14 @@ function Hero({ title, subtitle }) {
         <p className="kicker">Con mucho amor</p>
         <h1 className="indie-flower-regular">{title}</h1>
         <p className="lead">{subtitle}</p>
-        <a href="#rsvp" className="button button--primary">
-          Confirmar asistencia
-        </a>
+        <div className="hero__actions">
+          <a href="#rsvp" className="button button--primary">
+            Confirmar asistencia
+          </a>
+          <a href="/detalles" className="button button--secondary">
+            Ver detalles finales
+          </a>
+        </div>
       </div>
     </header>
   );

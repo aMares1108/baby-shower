@@ -27,6 +27,7 @@ app.http("addRecord", {
                 name: payload.name || "",
                 phone: payload.phone || "",
                 guests: payload.guests || "",
+                message: payload.message || "pending",
                 createdAt: new Date().toISOString(),
             };
 

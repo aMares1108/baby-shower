@@ -64,6 +64,7 @@ app.http("listRecords", {
                     name: entity.name || "",
                     phone: entity.phone || "",
                     guests: entity.guests || "",
+                    message: entity.message || "",
                     createdAt: entity.createdAt || "",
                 });
             }
