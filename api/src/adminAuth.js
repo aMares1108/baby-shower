@@ -40,7 +40,7 @@ function verifySessionToken(token) {
         const parts = decoded.split(":");
 
         if (parts.length !== 3) {
-            return { ok: false, error: "Invalid token" };
+            return { ok: false, error: "Invalid token format" };
         }
 
         const [username, expiresAt, signature] = parts;
@@ -48,7 +48,7 @@ function verifySessionToken(token) {
         const expectedSignature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
 
         if (signature !== expectedSignature) {
-            return { ok: false, error: "Invalid token" };
+            return { ok: false, error: "Invalid signature" };
         }
 
         if (Number(expiresAt) < Date.now()) {
