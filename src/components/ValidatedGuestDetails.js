@@ -15,7 +15,7 @@ async function requestValidatedDetails(payload) {
     throw requestError;
   }
 
-  return body;
+  return body.record || null;
 }
 
 function formatDate(dateValue) {
@@ -35,7 +35,6 @@ function ValidatedGuestDetails({ eventName, dateLabel, timeLabel, place, locatio
     guests: "",
   });
   const [record, setRecord] = useState(null);
-  const [secretDetails, setSecretDetails] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -43,8 +42,8 @@ function ValidatedGuestDetails({ eventName, dateLabel, timeLabel, place, locatio
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place || "")}`;
   }, [place]);
 
-  const mapUrl = secretDetails?.mapUrl || locationUrl || fallbackMapUrl;
-  const addressText = secretDetails?.addressText || place;
+  const mapUrl = locationUrl || fallbackMapUrl;
+  const addressText = place;
 
   const onChange = (event) => {
     const { name, value } = event.target;
@@ -57,7 +56,6 @@ function ValidatedGuestDetails({ eventName, dateLabel, timeLabel, place, locatio
     if (!formData.phone.trim() || !formData.guests.trim()) {
       setError("Escribe tu telefono y numero de invitados para validar tu registro.");
       setRecord(null);
-      setSecretDetails(null);
       return;
     }
 
@@ -65,7 +63,6 @@ function ValidatedGuestDetails({ eventName, dateLabel, timeLabel, place, locatio
     if (phoneDigits.length < 10) {
       setError("Tu telefono debe incluir al menos 10 digitos.");
       setRecord(null);
-      setSecretDetails(null);
       return;
     }
 
@@ -73,7 +70,6 @@ function ValidatedGuestDetails({ eventName, dateLabel, timeLabel, place, locatio
     if (!Number.isFinite(guestsNumber) || guestsNumber < 0) {
       setError("Escribe un numero de invitados valido.");
       setRecord(null);
-      setSecretDetails(null);
       return;
     }
 
@@ -81,15 +77,13 @@ function ValidatedGuestDetails({ eventName, dateLabel, timeLabel, place, locatio
     setError("");
 
     try {
-      const responseData = await requestValidatedDetails({
+      const nextRecord = await requestValidatedDetails({
         phone: phoneDigits,
         guests: guestsNumber,
       });
-      setRecord(responseData.record || null);
-      setSecretDetails(responseData.secretDetails || null);
+      setRecord(nextRecord);
     } catch (requestError) {
       setRecord(null);
-      setSecretDetails(null);
       setError(requestError.message);
     } finally {
       setLoading(false);

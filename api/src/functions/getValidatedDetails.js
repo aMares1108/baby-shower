@@ -82,17 +82,11 @@ app.http("getValidatedDetails", {
                 };
             }
 
-            const secretDetails = {
-                addressText: process.env.FINAL_DETAILS_ADDRESS_TEXT || "",
-                mapUrl: process.env.FINAL_DETAILS_MAP_URL || "",
-            };
-
             return {
                 status: 200,
                 jsonBody: {
                     ok: true,
                     record: matchedRecord,
-                    secretDetails,
                 },
             };
         } catch (error) {
