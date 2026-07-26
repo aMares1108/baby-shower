@@ -19,8 +19,7 @@ Invitacion web construida en React con arquitectura modular por componentes.
 ## Panel de administrador
 
 - Ruta: `/admin`
-- Variables de entorno requeridas en la API:
-	- `ADMIN_USERNAME`
-	- `ADMIN_PASSWORD`
-	- `ADMIN_SESSION_SECRET` (opcional, si no se define se reutiliza `ADMIN_PASSWORD` para firmar la sesion)
+- Autenticacion: Azure Static Web Apps (`/.auth/login/aad`).
+- Roles requeridos: `colaborador` para acceder a `/admin` y `/api/listRecords`.
+- Cierre de sesion: `/.auth/logout`.
 - La API sigue necesitando `TABLES_CONNECTION_STRING` y opcionalmente `TABLES_TABLE_NAME`.

@@ -1,81 +1,29 @@
-const crypto = require("crypto");
+function getClientPrincipal(request) {
+    const encoded = request.headers.get("x-ms-client-principal") || "";
 
-const SESSION_DURATION_MS = 1000 * 60 * 60 * 8;
-
-function getAdminConfig() {
-    return {
-        username: process.env.ADMIN_USERNAME,
-        password: process.env.ADMIN_PASSWORD,
-        secret: process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD,
-    };
-}
-
-function isAdminConfigured() {
-    const { username, password, secret } = getAdminConfig();
-    return Boolean(username && password && secret);
-}
-
-function createSessionToken(username) {
-    const { secret } = getAdminConfig();
-    const expiresAt = Date.now() + SESSION_DURATION_MS;
-    const payload = `${username}:${expiresAt}`;
-    const signature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
-    return Buffer.from(`${payload}:${signature}`, "utf8").toString("base64url");
-}
-
-function validateCredentials(username, password) {
-    const adminConfig = getAdminConfig();
-    return username === adminConfig.username && password === adminConfig.password;
-}
-
-function verifySessionToken(token) {
-    if (!token) {
-        return { ok: false, error: "Missing token" };
+    if (!encoded) {
+        return { ok: false, error: "Missing client principal" };
     }
-
-    const { secret } = getAdminConfig();
 
     try {
-        const decoded = Buffer.from(token, "base64url").toString("utf8");
-        const parts = decoded.split(":");
+        const decoded = Buffer.from(encoded, "base64").toString("utf8");
+        const principal = JSON.parse(decoded);
 
-        if (parts.length !== 3) {
-            console.error("Invalid token format", { decoded, parts });
-            return { ok: false, error: "Invalid token format"};
-        }
-
-        const [username, expiresAt, signature] = parts;
-        const payload = `${username}:${expiresAt}`;
-        const expectedSignature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
-
-        if (signature !== expectedSignature) {
-            return { ok: false, error: "Invalid signature" };
-        }
-
-        if (Number(expiresAt) < Date.now()) {
-            return { ok: false, error: "Expired token" };
-        }
-
-        return { ok: true, username };
+        return { ok: true, principal };
     } catch {
-        return { ok: false, error: "Invalid token" };
+        return { ok: false, error: "Invalid client principal" };
     }
 }
 
-function getBearerToken(request) {
-    const authorization = request.headers.get("authorization") || "";
+function hasRole(clientPrincipal, role) {
+    const roles = Array.isArray(clientPrincipal?.userRoles)
+        ? clientPrincipal.userRoles
+        : [];
 
-    if (!authorization.startsWith("Bearer ")) {
-        return "";
-    }
-
-    return authorization.slice("Bearer ".length).trim();
+    return roles.includes(role);
 }
 
 module.exports = {
-    createSessionToken,
-    getBearerToken,
-    isAdminConfigured,
-    validateCredentials,
-    verifySessionToken,
+    getClientPrincipal,
+    hasRole,
 };

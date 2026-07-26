@@ -1,17 +1,34 @@
 import React, { useEffect, useState } from "react";
 
-const ADMIN_SESSION_KEY = "adminSessionToken";
+const LOGIN_URL = "/.auth/login/aad?post_login_redirect_uri=/admin";
+const LOGOUT_URL = "/.auth/logout?post_logout_redirect_uri=/admin";
 
-async function requestRecords(sessionToken) {
-  const headers = sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {};
-  const response = await fetch("/api/listRecords", { headers });
+async function requestRecords() {
+  const response = await fetch("/api/listRecords");
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.error || "No fue posible cargar los registros.");
+    const requestError = new Error(payload.error || "No fue posible cargar los registros.");
+    requestError.status = response.status;
+    throw requestError;
   }
 
   return payload.records || [];
+}
+
+async function requestClientPrincipal() {
+  const response = await fetch("/.auth/me");
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    return null;
+  }
+
+  if (payload?.clientPrincipal) {
+    return payload.clientPrincipal;
+  }
+
+  return null;
 }
 
 function formatDate(dateValue) {
@@ -25,46 +42,30 @@ function formatDate(dateValue) {
   }).format(new Date(dateValue));
 }
 
-async function loginAdmin(username, password) {
-  const response = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
-  });
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(payload.error || "No fue posible iniciar sesion.");
-  }
-
-  return payload.token;
-}
-
 function AdminRecords({ eventName }) {
   const [records, setRecords] = useState([]);
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
-  const [sessionToken, setSessionToken] = useState("");
+  const [principal, setPrincipal] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [authenticating, setAuthenticating] = useState(false);
 
   const totalGuests = records.reduce((sum, record) => {
     return sum + (Number(record.guests) || 0);
   }, 0);
 
-  const loadRecords = async (token) => {
+  const loadRecords = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const nextRecords = await requestRecords(token);
+      const nextRecords = await requestRecords();
       setRecords(nextRecords);
     } catch (requestError) {
       setRecords([]);
-      if (requestError.message === "Unauthorized") {
-        sessionStorage.removeItem(ADMIN_SESSION_KEY);
-        setSessionToken("");
+      if (requestError.status === 401) {
+        setPrincipal(null);
         setError("Tu sesion ya no es valida. Inicia sesion de nuevo.");
+      } else if (requestError.status === 403) {
+        setError("Tu usuario no tiene permisos de colaborador.");
       } else {
         setError(requestError.message);
       }
@@ -74,49 +75,30 @@ function AdminRecords({ eventName }) {
   };
 
   useEffect(() => {
-    const storedSessionToken = sessionStorage.getItem(ADMIN_SESSION_KEY) || "";
+    const initialize = async () => {
+      setLoading(true);
+      setError("");
 
-    if (!storedSessionToken) {
-      setLoading(false);
-      return;
-    }
+      const nextPrincipal = await requestClientPrincipal();
 
-    setSessionToken(storedSessionToken);
-    loadRecords(storedSessionToken);
+      if (!nextPrincipal) {
+        setPrincipal(null);
+        setLoading(false);
+        return;
+      }
+
+      setPrincipal(nextPrincipal);
+      await loadRecords();
+    };
+
+    initialize();
   }, []);
 
-  const onChange = (event) => {
-    const { name, value } = event.target;
-    setCredentials((current) => ({ ...current, [name]: value }));
-  };
-
-  const onLogin = async (event) => {
-    event.preventDefault();
-    setAuthenticating(true);
-    setError("");
-
-    try {
-      const nextSessionToken = await loginAdmin(credentials.username, credentials.password);
-      sessionStorage.setItem(ADMIN_SESSION_KEY, nextSessionToken);
-      setSessionToken(nextSessionToken);
-      setCredentials({ username: credentials.username, password: "" });
-      await loadRecords(nextSessionToken);
-    } catch (loginError) {
-      setError(loginError.message);
-    } finally {
-      setAuthenticating(false);
-    }
-  };
-
   const onLogout = () => {
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
-    setSessionToken("");
-    setRecords([]);
-    setCredentials({ username: "", password: "" });
-    setError("");
+    window.location.assign(LOGOUT_URL);
   };
 
-  if (!sessionToken) {
+  if (!principal) {
     return (
       <main className="admin-view">
         <section className="section">
@@ -125,7 +107,7 @@ function AdminRecords({ eventName }) {
               <p className="kicker">Administrador</p>
               <h1 className="admin-view__title">Iniciar sesion</h1>
               <p className="lead admin-view__lead">
-                Accede con las credenciales de administrador configuradas para {eventName}.
+                Accede con Entra ID para administrar las confirmaciones de {eventName}.
               </p>
             </div>
             <a href="/" className="button button--primary">
@@ -136,34 +118,14 @@ function AdminRecords({ eventName }) {
 
         <section className="section section--soft">
           <div className="container admin-panel admin-panel--narrow">
-            <form className="form auto-center" onSubmit={onLogin} noValidate>
-              <label>
-                Usuario
-                <input
-                  type="text"
-                  name="username"
-                  required
-                  value={credentials.username}
-                  onChange={onChange}
-                />
-              </label>
-              <label>
-                Contraseña
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={credentials.password}
-                  onChange={onChange}
-                />
-              </label>
-              <button type="submit" className="button button--primary" disabled={authenticating}>
-                {authenticating ? "Ingresando..." : "Entrar al panel"}
-              </button>
+            <div className="form auto-center">
+              <a href={LOGIN_URL} className="button button--primary">
+                Iniciar sesion con Entra ID
+              </a>
               <p className={`form__message${error ? " admin-feedback--error" : ""}`} aria-live="polite">
-                {error}
+                {error || "Necesitas el rol colaborador para acceder al panel."}
               </p>
-            </form>
+            </div>
           </div>
         </section>
       </main>
@@ -171,7 +133,7 @@ function AdminRecords({ eventName }) {
   }
 
   const onRefresh = async () => {
-    await loadRecords(sessionToken);
+    await loadRecords();
   };
 
   return (

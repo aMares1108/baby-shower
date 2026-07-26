@@ -1,9 +1,8 @@
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const {
-    getBearerToken,
-    isAdminConfigured,
-    verifySessionToken,
+    getClientPrincipal,
+    hasRole,
 } = require("../adminAuth");
 
 app.http("listRecords", {
@@ -24,27 +23,32 @@ app.http("listRecords", {
                 };
             }
 
-            if (!isAdminConfigured()) {
-                return {
-                    status: 500,
-                    jsonBody: {
-                        ok: false,
-                        error: "Admin credentials are not configured",
-                    },
-                };
-            }
+            const authResult = getClientPrincipal(request);
 
-            const session = verifySessionToken(getBearerToken(request));
-
-            if (!session.ok) {
+            if (!authResult.ok) {
                 return {
                     status: 401,
                     jsonBody: {
                         ok: false,
-                        error: session.error || "Unauthorized",
+                        error: "Unauthorized",
                     },
                 };
             }
+
+            if (!hasRole(authResult.principal, "colaborador")) {
+                return {
+                    status: 403,
+                    jsonBody: {
+                        ok: false,
+                        error: "Forbidden",
+                    },
+                };
+            }
+
+            context.log("listRecords authorized", {
+                userId: authResult.principal?.userId,
+                userDetails: authResult.principal?.userDetails,
+            });
 
             const tableClient = TableClient.fromConnectionString(
                 connectionString,
