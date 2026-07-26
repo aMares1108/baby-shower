@@ -76,7 +76,41 @@ function formatDate(dateValue) {
   }).format(new Date(dateValue));
 }
 
-function AdminRecords({ eventName }) {
+function buildWhatsAppUrl(record, eventName, dateLabel, timeLabel, place) {
+  const digits = (record.phone || "").replace(/\D/g, "");
+
+  if (!digits) {
+    return null;
+  }
+
+  const phone = digits.startsWith("52") ? digits : `52${digits}`;
+  const guests = Number(record.guests) || 0;
+  const name = record.name || "invitado";
+  const noGuests = guests === 0;
+  const guestsLabel = guests === 1 ? "1 lugar" : `${guests} lugares`;
+  const message = noGuests
+    ? `¡Hola ${name}! 🎀\n\n` +
+      `Te escribimos porque notamos que aún no tienes lugares registrados para el *${eventName}* y ¡nos encantaría contarte entre nuestros invitados! 🥰\n\n` +
+      `📅 *Fecha:* ${dateLabel}\n` +
+      `🕐 *Hora:* ${timeLabel}\n` +
+      `📍 *Lugar:* ${place}\n\n` +
+      `¿Podrás acompañarnos? ¿Cuántos lugares necesitas apartar? 🍼\n\n` +
+      `¡Con mucho cariño te esperamos! ✨`
+    : `¡Hola ${name}! 🎀\n\n` +
+      `Te escribimos para recordarte que el *${eventName}* ya está muy cerca y queremos asegurarnos de que todo esté listo para recibirte.\n\n` +
+      `📋 *Tus datos de registro:*\n` +
+      `👤 Nombre: ${name}\n` +
+      `👥 Lugares reservados: ${guestsLabel}\n\n` +
+      `📅 *Fecha:* ${dateLabel}\n` +
+      `🕐 *Hora:* ${timeLabel}\n` +
+      `📍 *Lugar:* ${place}\n\n` +
+      `¿Tus datos son correctos? ¿Sigues confirmado/a? 🥰\n\n` +
+      `¡Con mucho cariño te esperamos! 🍼✨`;
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
   const [records, setRecords] = useState([]);
   const [principal, setPrincipal] = useState(null);
   const [error, setError] = useState("");
@@ -320,7 +354,17 @@ function AdminRecords({ eventName }) {
                 {records.map((record) => (
                   <tr key={record.rowKey}>
                     <td>{record.name || "Sin nombre"}</td>
-                    <td>{record.phone || "Sin telefono"}</td>
+                    <td>
+                      {record.phone ? (
+                        <a
+                          href={buildWhatsAppUrl(record, eventName, dateLabel, timeLabel, place)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {record.phone}
+                        </a>
+                      ) : "Sin telefono"}
+                    </td>
                     <td>{record.guests || "0"}</td>
                     <td>{formatDate(record.createdAt)}</td>
                     <td>

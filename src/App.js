@@ -28,7 +28,7 @@ function App() {
   }).format(eventDate);
 
   if (isAdminView) {
-    return <AdminRecords eventName={eventConfig.title} />;
+    return <AdminRecords eventName={eventConfig.title} dateLabel={dateLabel} timeLabel={timeLabel} place={eventConfig.place} />;
   }
 
   return (
