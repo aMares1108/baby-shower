@@ -40,7 +40,7 @@ function verifySessionToken(token) {
         const parts = decoded.split(":");
 
         if (parts.length !== 3) {
-            return { ok: false, error: "Invalid token format" };
+            return { ok: false, error: "Invalid token format", parts };
         }
 
         const [username, expiresAt, signature] = parts;
