@@ -394,6 +394,16 @@ h2 {
 	background: #fff2f8;
 }
 
+.admin-button--validate {
+	background: #e9fff4;
+	color: #176e45;
+	border: 1px solid #95d8b5;
+}
+
+.admin-button--validate:hover {
+	background: #d4f5e6;
+}
+
 .admin-table tbody tr:nth-child(even) {
 	background: #fff8fc;
 }

@@ -266,6 +266,32 @@ function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
     }
   };
 
+  const onValidateRecord = async (record) => {
+    const shouldValidate = window.confirm(`¿Validar el registro de ${record.name || "este invitado"}? Su estado cambiara a "validated".`);
+    if (!shouldValidate) {
+      return;
+    }
+
+    setProcessingRowKey(record.rowKey);
+    setError("");
+
+    try {
+      await requestUpdateRecord({
+        partitionKey: record.partitionKey,
+        rowKey: record.rowKey,
+        name: record.name,
+        phone: record.phone,
+        guests: record.guests,
+        message: "validated",
+      });
+      await loadRecords();
+    } catch (requestError) {
+      handleProtectedActionError(requestError);
+    } finally {
+      setProcessingRowKey("");
+    }
+  };
+
   const onDeleteRecord = async (record) => {
     const shouldDelete = window.confirm("¿Seguro que deseas eliminar este registro? Esta accion no se puede deshacer.");
     if (!shouldDelete) {
@@ -389,6 +415,16 @@ function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
                         >
                           Editar
                         </button>
+                        {record.message !== "validated" ? (
+                          <button
+                            type="button"
+                            className="button admin-button--validate"
+                            onClick={() => onValidateRecord(record)}
+                            disabled={loading || processingRowKey === record.rowKey}
+                          >
+                            Validar
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className="button admin-button--ghost"
