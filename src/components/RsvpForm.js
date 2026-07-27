@@ -21,6 +21,12 @@ function RsvpForm() {
       return;
     }
 
+    const phoneDigits = formData.phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      setMessage("El numero de telefono debe tener exactamente 10 digitos.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/addRecord", {
         method: "POST",

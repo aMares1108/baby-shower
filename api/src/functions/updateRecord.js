@@ -1,12 +1,9 @@
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
-const {
-    getClientPrincipal,
-    hasRole,
-} = require("../adminAuth");
+const { getClientPrincipal, hasRole } = require("../adminAuth");
 
-app.http("listRecords", {
-    methods: ["GET"],
+app.http("updateRecord", {
+    methods: ["PUT"],
     authLevel: "anonymous",
     handler: async (request, context) => {
         try {
@@ -45,51 +42,52 @@ app.http("listRecords", {
                 };
             }
 
-            context.log("listRecords authorized", {
-                userId: authResult.principal?.userId,
-                userDetails: authResult.principal?.userDetails,
-            });
+            const payload = await request.json().catch(() => ({}));
+            const partitionKey = payload.partitionKey || "";
+            const rowKey = payload.rowKey || "";
+
+            if (!partitionKey || !rowKey) {
+                return {
+                    status: 400,
+                    jsonBody: {
+                        ok: false,
+                        error: "partitionKey and rowKey are required",
+                    },
+                };
+            }
+
+            const entity = {
+                partitionKey,
+                rowKey,
+                name: payload.name || "",
+                phone: payload.phone || "",
+                guests: payload.guests || "",
+                message: payload.message || "",
+                updatedAt: new Date().toISOString(),
+            };
 
             const tableClient = TableClient.fromConnectionString(
                 connectionString,
                 tableName
             );
 
-            const records = [];
-
-            for await (const entity of tableClient.listEntities()) {
-                records.push({
-                    partitionKey: entity.partitionKey,
-                    rowKey: entity.rowKey,
-                    name: entity.name || "",
-                    phone: entity.phone || "",
-                    guests: entity.guests || "",
-                    message: entity.message || "",
-                    createdAt: entity.createdAt || "",
-                });
-            }
-
-            records.sort((left, right) => {
-                return new Date(right.createdAt || 0) - new Date(left.createdAt || 0);
-            });
+            await tableClient.updateEntity(entity, "Merge");
 
             return {
                 status: 200,
                 jsonBody: {
                     ok: true,
-                    table: tableName,
-                    count: records.length,
-                    records,
+                    entity,
                 },
             };
         } catch (error) {
-            context.error("listRecords error", error);
+            context.error("updateRecord error", error);
 
             return {
                 status: 500,
                 jsonBody: {
                     ok: false,
-                    error: error?.message || "Failed to list records",
+                    error: error?.message || "Failed to update record",
                 },
             };
         }

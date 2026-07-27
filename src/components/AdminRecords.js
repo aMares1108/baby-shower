@@ -1,17 +1,68 @@
 import React, { useEffect, useState } from "react";
 
-const ADMIN_SESSION_KEY = "adminSessionToken";
+const LOGIN_URL = "/.auth/login/aad?post_login_redirect_uri=/admin";
+const LOGOUT_URL = "/.auth/logout?post_logout_redirect_uri=/admin";
 
-async function requestRecords(sessionToken) {
-  const headers = sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {};
-  const response = await fetch("/api/listRecords", { headers });
+async function requestRecords() {
+  const response = await fetch("/api/listRecords");
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.error || "No fue posible cargar los registros.");
+    const requestError = new Error(payload.error || "No fue posible cargar los registros.");
+    requestError.status = response.status;
+    throw requestError;
   }
 
   return payload.records || [];
+}
+
+async function requestUpdateRecord(record) {
+  const response = await fetch("/api/updateRecord", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record)
+  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const requestError = new Error(payload.error || "No fue posible actualizar el registro.");
+    requestError.status = response.status;
+    throw requestError;
+  }
+
+  return payload;
+}
+
+async function requestDeleteRecord(record) {
+  const response = await fetch("/api/deleteRecord", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record)
+  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const requestError = new Error(payload.error || "No fue posible eliminar el registro.");
+    requestError.status = response.status;
+    throw requestError;
+  }
+
+  return payload;
+}
+
+async function requestClientPrincipal() {
+  const response = await fetch("/.auth/me");
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    return null;
+  }
+
+  if (payload?.clientPrincipal) {
+    return payload.clientPrincipal;
+  }
+
+  return null;
 }
 
 function formatDate(dateValue) {
@@ -25,46 +76,65 @@ function formatDate(dateValue) {
   }).format(new Date(dateValue));
 }
 
-async function loginAdmin(username, password) {
-  const response = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
-  });
-  const payload = await response.json().catch(() => ({}));
+function buildWhatsAppUrl(record, eventName, dateLabel, timeLabel, place) {
+  const digits = (record.phone || "").replace(/\D/g, "");
 
-  if (!response.ok) {
-    throw new Error(payload.error || "No fue posible iniciar sesion.");
+  if (!digits) {
+    return null;
   }
 
-  return payload.token;
+  const phone = digits.startsWith("52") ? digits : `52${digits}`;
+  const guests = Number(record.guests) || 0;
+  const name = record.name || "invitado";
+  const noGuests = guests === 0;
+  const guestsLabel = guests === 1 ? "1 lugar" : `${guests} lugares`;
+  const message = noGuests
+    ? `¡Hola ${name}! 🎀\n\n` +
+      `Te escribimos porque notamos que aún no tienes lugares registrados para el *${eventName}* y ¡nos encantaría contarte entre nuestros invitados! 🥰\n\n` +
+      `📅 *Fecha:* ${dateLabel}\n` +
+      `🕐 *Hora:* ${timeLabel}\n` +
+      `📍 *Lugar:* ${place}\n\n` +
+      `¿Podrás acompañarnos? ¿Cuántos lugares necesitas apartar? 🍼\n\n` +
+      `¡Con mucho cariño te esperamos! ✨`
+    : `¡Hola ${name}! 🎀\n\n` +
+      `Te escribimos para recordarte que el *${eventName}* ya está muy cerca y queremos asegurarnos de que todo esté listo para recibirte.\n\n` +
+      `📋 *Tus datos de registro:*\n` +
+      `👤 Nombre: ${name}\n` +
+      `👥 Lugares reservados: ${guestsLabel}\n\n` +
+      `📅 *Fecha:* ${dateLabel}\n` +
+      `🕐 *Hora:* ${timeLabel}\n` +
+      `📍 *Lugar:* ${place}\n\n` +
+      `¿Tus datos son correctos? ¿Sigues confirmado/a? 🥰\n\n` +
+      `¡Con mucho cariño te esperamos! 🍼✨`;
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
-function AdminRecords({ eventName }) {
+function AdminRecords({ eventName, dateLabel, timeLabel, place }) {
   const [records, setRecords] = useState([]);
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
-  const [sessionToken, setSessionToken] = useState("");
+  const [principal, setPrincipal] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [authenticating, setAuthenticating] = useState(false);
+  const [processingRowKey, setProcessingRowKey] = useState("");
 
   const totalGuests = records.reduce((sum, record) => {
     return sum + (Number(record.guests) || 0);
   }, 0);
 
-  const loadRecords = async (token) => {
+  const loadRecords = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const nextRecords = await requestRecords(token);
+      const nextRecords = await requestRecords();
       setRecords(nextRecords);
     } catch (requestError) {
       setRecords([]);
-      if (requestError.message === "Unauthorized") {
-        sessionStorage.removeItem(ADMIN_SESSION_KEY);
-        setSessionToken("");
+      if (requestError.status === 401) {
+        setPrincipal(null);
         setError("Tu sesion ya no es valida. Inicia sesion de nuevo.");
+      } else if (requestError.status === 403) {
+        setError("Tu usuario no tiene permisos de colaborador.");
       } else {
         setError(requestError.message);
       }
@@ -74,49 +144,30 @@ function AdminRecords({ eventName }) {
   };
 
   useEffect(() => {
-    const storedSessionToken = sessionStorage.getItem(ADMIN_SESSION_KEY) || "";
+    const initialize = async () => {
+      setLoading(true);
+      setError("");
 
-    if (!storedSessionToken) {
-      setLoading(false);
-      return;
-    }
+      const nextPrincipal = await requestClientPrincipal();
 
-    setSessionToken(storedSessionToken);
-    loadRecords(storedSessionToken);
+      if (!nextPrincipal) {
+        setPrincipal(null);
+        setLoading(false);
+        return;
+      }
+
+      setPrincipal(nextPrincipal);
+      await loadRecords();
+    };
+
+    initialize();
   }, []);
 
-  const onChange = (event) => {
-    const { name, value } = event.target;
-    setCredentials((current) => ({ ...current, [name]: value }));
-  };
-
-  const onLogin = async (event) => {
-    event.preventDefault();
-    setAuthenticating(true);
-    setError("");
-
-    try {
-      const nextSessionToken = await loginAdmin(credentials.username, credentials.password);
-      sessionStorage.setItem(ADMIN_SESSION_KEY, nextSessionToken);
-      setSessionToken(nextSessionToken);
-      setCredentials({ username: credentials.username, password: "" });
-      await loadRecords(nextSessionToken);
-    } catch (loginError) {
-      setError(loginError.message);
-    } finally {
-      setAuthenticating(false);
-    }
-  };
-
   const onLogout = () => {
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
-    setSessionToken("");
-    setRecords([]);
-    setCredentials({ username: "", password: "" });
-    setError("");
+    window.location.assign(LOGOUT_URL);
   };
 
-  if (!sessionToken) {
+  if (!principal) {
     return (
       <main className="admin-view">
         <section className="section">
@@ -125,7 +176,7 @@ function AdminRecords({ eventName }) {
               <p className="kicker">Administrador</p>
               <h1 className="admin-view__title">Iniciar sesion</h1>
               <p className="lead admin-view__lead">
-                Accede con las credenciales de administrador configuradas para {eventName}.
+                Accede con Entra ID para administrar las confirmaciones de {eventName}.
               </p>
             </div>
             <a href="/" className="button button--primary">
@@ -136,34 +187,14 @@ function AdminRecords({ eventName }) {
 
         <section className="section section--soft">
           <div className="container admin-panel admin-panel--narrow">
-            <form className="form auto-center" onSubmit={onLogin} noValidate>
-              <label>
-                Usuario
-                <input
-                  type="text"
-                  name="username"
-                  required
-                  value={credentials.username}
-                  onChange={onChange}
-                />
-              </label>
-              <label>
-                Contraseña
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={credentials.password}
-                  onChange={onChange}
-                />
-              </label>
-              <button type="submit" className="button button--primary" disabled={authenticating}>
-                {authenticating ? "Ingresando..." : "Entrar al panel"}
-              </button>
+            <div className="form auto-center">
+              <a href={LOGIN_URL} className="button button--primary">
+                Iniciar sesion con Entra ID
+              </a>
               <p className={`form__message${error ? " admin-feedback--error" : ""}`} aria-live="polite">
-                {error}
+                {error || "Necesitas el rol colaborador para acceder al panel."}
               </p>
-            </form>
+            </div>
           </div>
         </section>
       </main>
@@ -171,7 +202,116 @@ function AdminRecords({ eventName }) {
   }
 
   const onRefresh = async () => {
-    await loadRecords(sessionToken);
+    await loadRecords();
+  };
+
+  const handleProtectedActionError = (requestError) => {
+    if (requestError.status === 401) {
+      setPrincipal(null);
+      setError("Tu sesion ya no es valida. Inicia sesion de nuevo.");
+      return;
+    }
+
+    if (requestError.status === 403) {
+      setError("Tu usuario no tiene permisos de colaborador.");
+      return;
+    }
+
+    setError(requestError.message || "No fue posible completar la accion.");
+  };
+
+  const onEditRecord = async (record) => {
+    const nextName = window.prompt("Nombre", record.name || "");
+    if (nextName === null) {
+      return;
+    }
+
+    const nextPhone = window.prompt("Telefono", record.phone || "");
+    if (nextPhone === null) {
+      return;
+    }
+
+    const nextGuests = window.prompt("Invitados", String(record.guests || "0"));
+    if (nextGuests === null) {
+      return;
+    }
+
+    const nextMessage = window.prompt("Estado (ej. pending o validated)", record.message || "pending");
+    if (nextMessage === null) {
+      return;
+    }
+
+    const shouldUpdate = window.confirm("¿Confirmas actualizar este registro?");
+    if (!shouldUpdate) {
+      return;
+    }
+
+    setProcessingRowKey(record.rowKey);
+    setError("");
+
+    try {
+      await requestUpdateRecord({
+        partitionKey: record.partitionKey,
+        rowKey: record.rowKey,
+        name: nextName.trim(),
+        phone: nextPhone.trim(),
+        guests: nextGuests.trim(),
+        message: nextMessage.trim(),
+      });
+      await loadRecords();
+    } catch (requestError) {
+      handleProtectedActionError(requestError);
+    } finally {
+      setProcessingRowKey("");
+    }
+  };
+
+  const onValidateRecord = async (record) => {
+    const shouldValidate = window.confirm(`¿Validar el registro de ${record.name || "este invitado"}? Su estado cambiara a "validated".`);
+    if (!shouldValidate) {
+      return;
+    }
+
+    setProcessingRowKey(record.rowKey);
+    setError("");
+
+    try {
+      await requestUpdateRecord({
+        partitionKey: record.partitionKey,
+        rowKey: record.rowKey,
+        name: record.name,
+        phone: record.phone,
+        guests: record.guests,
+        message: "validated",
+      });
+      await loadRecords();
+    } catch (requestError) {
+      handleProtectedActionError(requestError);
+    } finally {
+      setProcessingRowKey("");
+    }
+  };
+
+  const onDeleteRecord = async (record) => {
+    const shouldDelete = window.confirm("¿Seguro que deseas eliminar este registro? Esta accion no se puede deshacer.");
+    if (!shouldDelete) {
+      return;
+    }
+
+    setProcessingRowKey(record.rowKey);
+    setError("");
+
+    try {
+      await requestDeleteRecord({
+        partitionKey: record.partitionKey,
+        rowKey: record.rowKey,
+      });
+      await loadRecords();
+    } catch (requestError) {
+      handleProtectedActionError(requestError);
+    } finally {
+      setProcessingRowKey("");
+    }
   };
 
   return (
@@ -238,16 +378,63 @@ function AdminRecords({ eventName }) {
                   <th>Nombre</th>
                   <th>Telefono</th>
                   <th>Invitados</th>
+                  <th>Estado</th>
                   <th>Fecha</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {records.map((record) => (
                   <tr key={record.rowKey}>
                     <td>{record.name || "Sin nombre"}</td>
-                    <td>{record.phone || "Sin telefono"}</td>
+                    <td>
+                      {record.phone ? (
+                        <a
+                          href={buildWhatsAppUrl(record, eventName, dateLabel, timeLabel, place)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {record.phone}
+                        </a>
+                      ) : "Sin telefono"}
+                    </td>
                     <td>{record.guests || "0"}</td>
+                    <td>
+                      <span className={`admin-status${record.message === "validated" ? " admin-status--validated" : ""}`}>
+                        {record.message || "pending"}
+                      </span>
+                    </td>
                     <td>{formatDate(record.createdAt)}</td>
+                    <td>
+                      <div className="admin-toolbar__actions">
+                        <button
+                          type="button"
+                          className="button admin-button--ghost"
+                          onClick={() => onEditRecord(record)}
+                          disabled={loading || processingRowKey === record.rowKey}
+                        >
+                          Editar
+                        </button>
+                        {record.message !== "validated" ? (
+                          <button
+                            type="button"
+                            className="button admin-button--validate"
+                            onClick={() => onValidateRecord(record)}
+                            disabled={loading || processingRowKey === record.rowKey}
+                          >
+                            Validar
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="button admin-button--ghost"
+                          onClick={() => onDeleteRecord(record)}
+                          disabled={loading || processingRowKey === record.rowKey}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

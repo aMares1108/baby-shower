@@ -179,6 +179,25 @@ h2 {
 	transform: translateY(-1px);
 }
 
+.button--secondary {
+	color: var(--accent);
+	background: #fff2f8;
+	border: 1px solid var(--ring);
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.button--secondary:hover {
+	background: #ffe9f4;
+	transform: translateY(-1px);
+}
+
+.hero__actions {
+	display: inline-flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
 .countdown {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(100px, 1fr));
@@ -375,8 +394,35 @@ h2 {
 	background: #fff2f8;
 }
 
+.admin-button--validate {
+	background: #e9fff4;
+	color: #176e45;
+	border: 1px solid #95d8b5;
+}
+
+.admin-button--validate:hover {
+	background: #d4f5e6;
+}
+
 .admin-table tbody tr:nth-child(even) {
 	background: #fff8fc;
+}
+
+.admin-status {
+	display: inline-block;
+	padding: 0.2rem 0.65rem;
+	border-radius: 999px;
+	border: 1px solid var(--ring);
+	background: #fff2f8;
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-transform: lowercase;
+}
+
+.admin-status--validated {
+	background: #e9fff4;
+	border-color: #95d8b5;
+	color: #176e45;
 }
 
 .form {
@@ -408,6 +454,20 @@ h2 {
 	min-height: 1.3rem;
 	color: var(--muted);
 	font-weight: 600;
+}
+
+.validated-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+}
+
+.validated-panel {
+	margin-top: 1rem;
+}
+
+.validated-map-link {
+	margin-top: 1.25rem;
 }
 
 .media-center {
@@ -457,6 +517,7 @@ h2 {
 @media (max-width: 720px) {
 	.details-grid,
 	.admin-grid,
+	.validated-grid,
 	.countdown {
 		grid-template-columns: 1fr;
 	}
@@ -467,6 +528,10 @@ h2 {
 
 	.hero {
 		padding-bottom: 4rem;
+	}
+
+	.hero__actions {
+		width: 100%;
 	}
 }
 
